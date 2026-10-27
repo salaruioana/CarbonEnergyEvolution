@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Who decarbonised their electricity? 2015-2024</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="controls">
+    <h1>Who decarbonised their electricity?</h1>
+
+    <label class="control">Year
+      <input id="year" type="range" min="2015" max="2024" step="1" value="2024">
+      <output id="year-out">2024</output>
+    </label>
+
+    <label class="control">Map colour
+      <select id="metric">
+        <option value="change">Change since 2015</option>
+        <option value="level">Carbon intensity</option>
+      </select>
+    </label>
+
+    <label class="control">Electricity use per person
+      <select id="group">
+        <option value="all">All countries</option>
+        <option value="low">Low</option>
+        <option value="middle">Middle</option>
+        <option value="high">High</option>
+      </select>
+    </label>
+
+    <label class="control">Find country
+      <input id="search" list="country-list" placeholder="Type a country" autocomplete="off">
+      <datalist id="country-list"></datalist>
+    </label>
+
+    <button id="clear" type="button">Clear selection</button>
+  </header>
+
+  <div id="error" class="error" hidden></div>
+
+  <main class="grid">
+    <section class="panel">
+      <h2>Where grids are clean or dirty</h2>
+      <div id="map" class="chart"></div>
+    </section>
+    <section class="panel">
+      <h2>Electricity use and carbon intensity</h2>
+      <div id="scatter" class="chart"></div>
+    </section>
+    <section class="panel">
+      <h2>Country profiles</h2>
+      <div id="parcoords" class="chart"></div>
+    </section>
+    <section class="panel">
+      <h2>Carbon intensity over time</h2>
+      <div id="line" class="chart"></div>
+    </section>
+  </main>
+
+  <script src="lib/d3.min.js"></script>
+  <script src="lib/plotly.min.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/colors.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/scatter.js"></script>
+  <script src="js/parcoords.js"></script>
+  <script src="js/line.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
