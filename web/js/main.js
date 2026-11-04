@@ -149,6 +149,7 @@ function context() {
   });
 
   // controls 
+  const yearInput = document.getElementById("year");
   const yearOut = document.getElementById("year-out");
   yearInput.addEventListener("input", () => {
     yearOut.textContent = yearInput.value;
