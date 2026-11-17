@@ -158,7 +158,6 @@ function context() {
   });
   // we add event listeners for buttons on the dashboard
   // we change the state, not the charts directly. The rendering mechanism makes sure the charts get updated to 
-  document.getElementById("metric").addEventListener("change", (e) => State.set({ mapMetric: e.target.value }));
   document.getElementById("group").addEventListener("change", (e) => State.set({ group: e.target.value, brushed: null }));
   document.getElementById("clear").addEventListener("click", () => State.clearSelection());
 

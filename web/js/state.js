@@ -1,7 +1,7 @@
 // Shared dashboard state (single source of truth for all four charts).
 //
 //   year        selected year, 2015..2024
-//   mapMetric   "change" (since 2015) or "level" (carbon intensity)
+//   REMOVED mapMetric   "change" (since 2015) or "level" (carbon intensity)
 //   group       "all" | "low" | "middle" | "high" (electricity use per person)
 //   selected    Set of ISO3 codes clicked by the user (outlined / drawn in the line chart)
 //   brushed     null (no brush) or Set of ISO3 codes inside the parallel-coordinates brush
@@ -11,7 +11,6 @@
 const State = (() => {
   let state = {
     year: 2024,
-    mapMetric: "change",
     group: "all",
     selected: new Set(["DEU", "GBR", "POL", "CHN", "IND"]),
     brushed: null,

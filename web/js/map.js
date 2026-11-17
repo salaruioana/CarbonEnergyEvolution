@@ -1,3 +1,4 @@
+
 // CHART 1 - Choropleth map (D3).
 const MapChart = {
   init(el, ctx) {
@@ -24,9 +25,47 @@ const MapChart = {
     this.svg = d3.select(el).append("svg")
       .attr("width", "100%")
       .attr("height", "100%")
-      .attr("viewBox", `0 0 ${width} ${height}`);
+      .attr("viewBox", `0 0 ${width} ${height}`)
+      .style("background-color", "#f1f3f5");
 
     this.mapGroup = this.svg.append("g");
+
+    // Fix Bermuda's polygon winding if D3 interprets it as covering the globe.
+    // D3 uses the opposite winding convention from standard GeoJSON.
+    this.geo = {
+      ...ctx.data.geo,
+      features: ctx.data.geo.features.map(feature => {
+        if (feature.id !== "BMU" || !feature.geometry) return feature;
+
+        const area = d3.geoArea(feature);
+
+        // A small island should not occupy more than half the globe.
+        if (area <= 2 * Math.PI) return feature;
+
+        const geometry = feature.geometry;
+        let coordinates;
+
+        if (geometry.type === "Polygon") {
+          coordinates = geometry.coordinates.map(ring =>
+            ring.slice().reverse()
+          );
+        } else if (geometry.type === "MultiPolygon") {
+          coordinates = geometry.coordinates.map(polygon =>
+            polygon.map(ring => ring.slice().reverse())
+          );
+        } else {
+          return feature;
+        }
+
+        return {
+          ...feature,
+          geometry: {
+            ...geometry,
+            coordinates
+          }
+        };
+      })
+    };
 
     // zoom and pan
     const zoom = d3.zoom()
@@ -36,12 +75,12 @@ const MapChart = {
 
     // geographic projection and path generator
     this.projection = d3.geoNaturalEarth1()
-      .fitSize([width, height], ctx.data.geo);
+      .fitSize([width, height], this.geo);
     this.path = d3.geoPath().projection(this.projection);
 
     // draw country polygons
     this.paths = this.mapGroup.selectAll("path")
-      .data(ctx.data.geo.features)
+      .data(this.geo.features)
       .join("path")
       .attr("d", this.path)
       .attr("cursor", "pointer")
@@ -58,11 +97,15 @@ const MapChart = {
         const countryName = ctx.data.countries[iso]?.name || iso;
 
         let html = `<strong>${countryName}</strong><br>`;
+
         if (row) {
-          html += `Carbon Intensity: ${row.ci.toFixed(1)} gCO2e/kWh<br>`;
-          if (row.ciChange !== undefined) {
-             const sign = row.ciChange > 0 ? "+" : "";
-             html += `Change (since 2015): ${sign}${row.ciChange.toFixed(1)}`;
+          if (row.ci != null) {
+            html += `Carbon Intensity: ${row.ci.toFixed(1)} gCO2e/kWh<br>`;
+          }
+
+          if (row.ciChange != null) {
+            const sign = row.ciChange > 0 ? "+" : "";
+            html += `Change (since 2015): ${sign}${row.ciChange.toFixed(1)}`;
           }
         } else {
           html += "No data";
@@ -82,14 +125,13 @@ const MapChart = {
     this.paths
       .attr("fill", d => {
         const row = yearData?.get(d.id);
-        if (!row) return ctx.colors.MISSING;
-        return s.mapMetric === "change" ? ctx.colors.forChange(row.ciChange) : ctx.colors.forLevel(row.ci);
+        return row ? ctx.colors.forChange(row.ciChange) : ctx.colors.MISSING;
       })
       .attr("opacity", d => {
         const iso = d.id;
         const hasData = yearData?.has(iso);
-        if (!hasData) return 1; 
-        
+        if (!hasData) return 1;
+
         // brush and group filter check
         const isVisible = ctx.isVisible(iso) && ctx.isBrushed(iso);
         return isVisible ? 1 : 0.15; // dim filtered countries
@@ -104,19 +146,14 @@ const MapChart = {
     const legendMin = document.getElementById("legend-min");
     const legendMid = document.getElementById("legend-mid");
     const legendMax = document.getElementById("legend-max");
-    
+
     if (legendBar && legendMin && legendMid && legendMax) {
-        if (s.mapMetric === "change") {
-          legendBar.style.background = "linear-gradient(to right, #0072B2, #d4d4d4, #D55E00)";
-          legendMin.textContent = "-300 (Cleaner)";
-          legendMid.textContent = "0";
-          legendMax.textContent = "+300 (Dirtier)";
-        } else {
-          legendBar.style.background = "linear-gradient(to right, #440154, #3b528b, #21918c, #5ec962, #fde725)";
-          legendMin.textContent = "0 (Clean)";
-          legendMid.textContent = "500";
-          legendMax.textContent = "1000+ (Dirty)";
-        }
+      legendBar.style.background =
+        "linear-gradient(to right, #0072B2, #d4d4d4, #D55E00)";
+
+      legendMin.textContent = "-300 (Cleaner)";
+      legendMid.textContent = "0";
+      legendMax.textContent = "+300 (Dirtier)";
     }
   }
 };

@@ -17,12 +17,13 @@
 //   this.extents keeps the active brushes in DATA units, so they survive resizes and year changes.
 const ParCoordsChart = {
   AXES: [
-    { key: "ci",        title: "Carbon intensity",       unit: "gCO\u2082e per kWh" },
-    { key: "fossil",    title: "Fossil share",           unit: "% of electricity" },
-    { key: "coal",      title: "Coal share",             unit: "% of electricity" },
-    { key: "solarWind", title: "Solar + wind",           unit: "% of electricity" },
-    { key: "elecPc",    title: "Electricity per person", unit: "kWh, log scale", log: true },
-    { key: "ciChange",  title: "Change since 2015",      unit: "gCO\u2082e per kWh" },
+    { key: "ci",      title: "Carbon intensity", unit: "gCO₂e per kWh" },
+    { key: "coal",    title: "Coal share",       unit: "% of electricity" },
+    { key: "gas",     title: "Gas share",        unit: "% of electricity" },
+    { key: "hydro",   title: "Hydro share",      unit: "% of electricity" },
+    { key: "nuclear", title: "Nuclear share",    unit: "% of electricity" },
+    { key: "solar",   title: "Solar share",      unit: "% of electricity" },
+    { key: "wind",    title: "Wind share",       unit: "% of electricity" },
   ],
   MARGIN: { top: 46, right: 124, bottom: 14, left: 58 },
 
@@ -43,11 +44,12 @@ const ParCoordsChart = {
     const pos = rows.map((r) => r.elecPc).filter((v) => v > 0);
     this.domains = {
       ci: [0, d3.max(rows, (r) => r.ci)],
-      fossil: [0, 100],
       coal: [0, 100],
-      solarWind: [0, Math.ceil(d3.max(rows, (r) => r.solarWind) / 10) * 10],
-      elecPc: [d3.min(pos) * 0.9, d3.max(pos) * 1.1],
-      ciChange: d3.extent(rows, (r) => r.ciChange).map((v, i) => v + (i ? 10 : -10)),
+      gas: [0, 100],
+      hydro: [0, 100],
+      nuclear: [0, 100],
+      solar: [0, 100],
+      wind: [0, 100],
     };
   },
 
@@ -195,12 +197,16 @@ const ParCoordsChart = {
     groups.select("path.fill").attr("d", path).attr("fill", "none")
       .attr("stroke", colour).attr("stroke-width", 3).attr("stroke-linejoin", "round");
     // labels sit at the right end of each line; push them apart so they never overlap
+    // Labels sit at the right end of each line; push them apart so they never overlap.
+    const lastAxis = this.AXES[this.AXES.length - 1].key;
     const labelY = new Map();
     let last = -Infinity;
-    chosen.filter((d) => d.ciChange != null)
-      .sort((a, b) => y.ciChange(a.ciChange) - y.ciChange(b.ciChange))
+
+    chosen
+      .sort((a, b) => y[lastAxis](a[lastAxis]) - y[lastAxis](b[lastAxis]))
       .forEach((d) => {
-        last = Math.max(y.ciChange(d.ciChange), last + 14);
+        const currentY = y[lastAxis](d[lastAxis]);
+        last = Math.max(currentY, last + 14);
         labelY.set(d.iso, last);
       });
     const label = (iso) => {
@@ -208,7 +214,7 @@ const ParCoordsChart = {
       return n.length > 17 ? n.slice(0, 16) + "\u2026" : n;
     };
     groups.select("text")
-      .attr("x", x("ciChange") + 8)
+      .attr("x", x(lastAxis) + 8)
       .attr("y", (d) => labelY.get(d.iso) ?? 0)
       .attr("dy", "0.32em")
       .attr("fill", "#1c2430").attr("font-size", 12)

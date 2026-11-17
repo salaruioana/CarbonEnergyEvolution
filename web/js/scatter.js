@@ -108,11 +108,6 @@ const ScatterChart = {
           width: rows.map((r) => (selected(r) ? 3 : 0.6)),
           color: rows.map((r) => (selected(r) ? "#1c2430" : "#7b8594")),
         },
-        colorbar: {
-          title: { text: "Change since 2015<br>(gCO\u2082e per kWh)", side: "right" },
-          thickness: 12,
-          len: 0.9,
-        },
       },
     };
 
